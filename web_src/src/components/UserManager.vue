@@ -12,13 +12,13 @@
       </div>
     </div>
     <!--用户列表-->
-    <el-table :data="userList" style="width: 100%;font-size: 12px;" :height="winHeight"
+    <el-table size="medium"  :data="userList" style="width: 100%;font-size: 12px;" :height="winHeight"
               header-row-class-name="table-header">
       <el-table-column prop="username" label="用户名" min-width="160"/>
       <el-table-column prop="pushKey" label="pushkey" min-width="160"/>
       <el-table-column prop="role.name" label="类型" min-width="160"/>
       <el-table-column label="操作" min-width="450" fixed="right">
-        <template slot-scope="scope">
+        <template v-slot:default="scope">
           <el-button size="medium" icon="el-icon-edit" type="text" @click="edit(scope.row)">修改密码</el-button>
           <el-divider direction="vertical"></el-divider>
           <el-button size="medium" icon="el-icon-edit" type="text" @click="changePushKey(scope.row)">修改pushkey</el-button>
@@ -35,7 +35,7 @@
     <changePushKey ref="changePushKey"></changePushKey>
     <addUser ref="addUser"></addUser>
     <el-pagination
-      style="float: right"
+      style="text-align: right"
       @size-change="handleSizeChange"
       @current-change="currentChange"
       :current-page="currentPage"

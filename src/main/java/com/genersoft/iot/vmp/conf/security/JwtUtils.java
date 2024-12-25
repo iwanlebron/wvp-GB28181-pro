@@ -1,10 +1,12 @@
 package com.genersoft.iot.vmp.conf.security;
 
+import com.genersoft.iot.vmp.conf.UserSetting;
 import com.genersoft.iot.vmp.conf.security.dto.JwtUser;
 import com.genersoft.iot.vmp.service.IUserApiKeyService;
 import com.genersoft.iot.vmp.service.IUserService;
 import com.genersoft.iot.vmp.storager.dao.dto.User;
 import com.genersoft.iot.vmp.storager.dao.dto.UserApiKey;
+import lombok.extern.slf4j.Slf4j;
 import org.jose4j.jwk.JsonWebKey;
 import org.jose4j.jwk.JsonWebKeySet;
 import org.jose4j.jwk.RsaJsonWebKey;
@@ -18,8 +20,6 @@ import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.jose4j.lang.JoseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
@@ -32,10 +32,9 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class JwtUtils implements InitializingBean {
-
-    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
     public static final String HEADER = "access-token";
 
@@ -48,13 +47,15 @@ public class JwtUtils implements InitializingBean {
     /**
      * token过期时间(分钟)
      */
-    public static final long EXPIRATION_TIME = 30 * 24 * 60;
+    public static final long EXPIRATION_TIME = 30;
 
     private static RsaJsonWebKey rsaJsonWebKey;
 
     private static IUserService userService;
 
     private static IUserApiKeyService userApiKeyService;
+    
+    private static UserSetting userSetting;
 
     public static String getApiKeyHeader() {
         return API_KEY_HEADER;
@@ -70,12 +71,17 @@ public class JwtUtils implements InitializingBean {
         JwtUtils.userApiKeyService = userApiKeyService;
     }
 
+    @Resource
+    public void setUserSetting(UserSetting userSetting) {
+        JwtUtils.userSetting = userSetting;
+    }
+
     @Override
     public void afterPropertiesSet() {
         try {
             rsaJsonWebKey = generateRsaJsonWebKey();
         } catch (JoseException e) {
-            logger.error("生成RsaJsonWebKey报错。", e);
+            log.error("生成RsaJsonWebKey报错。", e);
         }
     }
 
@@ -145,7 +151,7 @@ public class JwtUtils implements InitializingBean {
             //get token
             return jws.getCompactSerialization();
         } catch (JoseException e) {
-            logger.error("[Token生成失败]： {}", e.getMessage());
+            log.error("[Token生成失败]： {}", e.getMessage());
         }
         return null;
     }
@@ -155,7 +161,7 @@ public class JwtUtils implements InitializingBean {
     }
 
     public static String createToken(String username) {
-        return createToken(username, EXPIRATION_TIME);
+        return createToken(username, userSetting.getLoginTimeout());
     }
 
     public static String getHeader() {
@@ -217,7 +223,7 @@ public class JwtUtils implements InitializingBean {
             }
             return jwtUser;
         } catch (Exception e) {
-            logger.error("[Token解析失败]： {}", e.getMessage());
+            log.error("[Token解析失败]： {}", e.getMessage());
             jwtUser.setStatus(JwtUser.TokenStatus.EXPIRED);
             return jwtUser;
         }

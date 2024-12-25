@@ -27,6 +27,7 @@ export default {
   created() {},
   data() {
     return {
+      endCallBack: null,
       syncStatus: null,
       percentage: 0,
       total: 0,
@@ -40,7 +41,7 @@ export default {
     };
   },
   methods: {
-    openDialog: function (deviceId) {
+    openDialog: function (deviceId, endCallBack) {
       console.log("deviceId: " + deviceId)
       this.deviceId = deviceId;
       this.showDialog = true;
@@ -50,6 +51,7 @@ export default {
       this.current= 0;
       this.syncFlag= false;
       this.syncStatus = null;
+      this.endCallBack = endCallBack;
       this.getProgress()
     },
     getProgress(){
@@ -58,16 +60,14 @@ export default {
         url:`/api/device/query/${this.deviceId}/sync_status/`,
       }).then((res) => {
         if (res.data.code === 0) {
-          if (!this.syncFlag) {
-            this.syncFlag = true;
-          }
 
           if (res.data.data != null) {
             if (res.data.data.syncIng) {
-              if (res.data.data.total == 0) {
+              if (res.data.data.total === 0) {
                 this.msg = `等待同步中`;
                 this.timmer = setTimeout(this.getProgress, 300)
               }else {
+                this.syncFlag = true;
                 this.total = res.data.data.total;
                 this.current = res.data.data.current;
                 this.percentage = Math.floor(Number(res.data.data.current)/Number(res.data.data.total)* 10000)/100;
@@ -87,6 +87,9 @@ export default {
                 }, 3000)
               }
             }
+          }else {
+            this.msg = res.data.msg;
+            this.timmer = setTimeout(this.getProgress, 300)
           }
         }else {
           if (this.syncFlag) {
@@ -105,6 +108,9 @@ export default {
       });
     },
     close: function (){
+      if (this.endCallBack) {
+        this.endCallBack()
+      }
       window.clearTimeout(this.timmer)
     }
   },

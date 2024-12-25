@@ -7,26 +7,28 @@
 
       <div class="page-header-btn">
         搜索:
-        <el-input @input="getMediaServerList" style="margin-right: 1rem; width: auto;" size="mini" placeholder="关键字"
+        <el-input @input="initData" style="margin-right: 1rem; width: auto;" size="mini" placeholder="关键字"
                   prefix-icon="el-icon-search" v-model="search"  clearable></el-input>
         开始时间:
         <el-date-picker
             v-model="startTime"
             type="datetime"
+            size="mini"
             value-format="yyyy-MM-dd HH:mm:ss"
-            @change="getMediaServerList"
+            @change="initData"
             placeholder="选择日期时间">
         </el-date-picker>
         结束时间:
         <el-date-picker
             v-model="endTime"
             type="datetime"
+            size="mini"
             value-format="yyyy-MM-dd HH:mm:ss"
-            @change="getMediaServerList"
+            @change="initData"
             placeholder="选择日期时间">
         </el-date-picker>
         节点选择:
-        <el-select size="mini" @change="getMediaServerList" style="width: 16rem; margin-right: 1rem;"
+        <el-select size="mini" @change="initData" style="width: 16rem; margin-right: 1rem;"
                    v-model="mediaServerId" placeholder="请选择" >
           <el-option label="全部" value=""></el-option>
           <el-option
@@ -38,11 +40,11 @@
         </el-select>
 <!--        <el-button size="mini" icon="el-icon-delete" type="danger" @click="deleteRecord()">批量删除</el-button>-->
         <el-button icon="el-icon-refresh-right" circle size="mini" :loading="loading"
-                   @click="getRecordList()"></el-button>
+                   @click="initData()"></el-button>
       </div>
     </div>
     <!--设备列表-->
-    <el-table :data="recordList" style="width: 100%" :height="winHeight">
+    <el-table size="medium"  :data="recordList" style="width: 100%" :height="winHeight">
       <el-table-column
         type="selection"
         width="55">
@@ -52,17 +54,17 @@
       <el-table-column prop="stream" label="流ID" width="380">
       </el-table-column>
       <el-table-column label="开始时间">
-        <template slot-scope="scope">
+        <template v-slot:default="scope">
           {{formatTimeStamp(scope.row.startTime)}}
         </template>
       </el-table-column>
       <el-table-column label="结束时间">
-        <template slot-scope="scope">
+        <template v-slot:default="scope">
           {{formatTimeStamp(scope.row.endTime)}}
         </template>
       </el-table-column>
       <el-table-column  label="时长">
-        <template slot-scope="scope">
+        <template v-slot:default="scope">
           <el-tag>{{formatTime(scope.row.timeLen)}}</el-tag>
         </template>
       </el-table-column>
@@ -71,7 +73,7 @@
       <el-table-column prop="mediaServerId" label="流媒体">
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
-        <template slot-scope="scope">
+        <template v-slot:default="scope">
           <el-button size="medium" icon="el-icon-video-play" type="text" @click="play(scope.row)">播放
           </el-button>
           <el-button size="medium" icon="el-icon-download" type="text" @click="downloadFile(scope.row)">下载
@@ -83,7 +85,7 @@
       </el-table-column>
     </el-table>
     <el-pagination
-      style="float: right"
+      style="text-align: right"
       @size-change="handleSizeChange"
       @current-change="currentChange"
       :current-page="currentPage"
@@ -146,14 +148,13 @@ export default {
   computed: {},
   mounted() {
     this.initData();
+    this.getMediaServerList();
   },
   destroyed() {
       this.$destroy('recordVideoPlayer');
   },
   methods: {
     initData: function () {
-      // 获取媒体节点列表
-      this.getMediaServerList();
       this.getRecordList();
     },
     currentChange: function (val) {
